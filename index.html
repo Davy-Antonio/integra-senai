@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GED SOLARES - Sistema de Gestão Documental</title>
+
+    <style>
+        :root {
+            --senai-azul-escuro: #003087;
+            --senai-azul-claro: #00A3E0;
+            --senai-laranja: #F26522;
+            --senai-cinza-fundo: #F4F6F9;
+            --senai-texto: #333333;
+            --senai-branco: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--senai-cinza-fundo); color: var(--senai-texto); display: flex; flex-direction: column; min-height: 100vh; }
+
+        header {
+            background-color: var(--senai-azul-escuro); color: var(--senai-branco);
+            padding: 15px 30px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 4px solid var(--senai-laranja); box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.5rem; font-weight: 600; }
+        header span { font-size: 0.9rem; color: var(--senai-azul-claro); font-weight: bold; }
+
+        .container {
+            background: var(--senai-branco); padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 800px; margin: 40px auto;
+            width: 90%; border-top: 4px solid var(--senai-azul-claro);
+        }
+
+        h2 { color: var(--senai-azul-escuro); margin-bottom: 15px; font-size: 1.2rem; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        label { font-weight: 600; font-size: 0.9rem; color: var(--senai-azul-escuro); display: block; margin-top: 10px; }
+        input, select { padding: 12px; margin: 5px 0 15px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; transition: border 0.3s; }
+        input:focus, select:focus { outline: none; border-color: var(--senai-azul-claro); box-shadow: 0 0 5px rgba(0, 163, 224, 0.3); }
+
+        button { padding: 12px; background-color: var(--senai-laranja); color: var(--senai-branco); border: none; border-radius: 4px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s, transform 0.1s; }
+        button:hover { background-color: #d95619; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .btn-logout { background-color: #d9534f; width: auto; padding: 8px 15px; font-size: 0.9rem; margin-bottom: 20px; }
+        .btn-logout:hover { background-color: #c9302c; }
+
+        .login-box, .main-app { display: none; }
+        .active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .upload-box {
+            background-color: #eef7fc; border: 2px dashed var(--senai-azul-claro);
+            padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;
+        }
+        .upload-box p { font-size: 0.9rem; color: var(--senai-azul-escuro); margin-bottom: 15px; }
+        .upload-btn { background-color: var(--senai-azul-escuro); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .upload-btn:hover { background-color: #001f5c; }
+
+        #preview-box { display: none; margin-top: 15px; text-align: center; }
+        #preview-img { max-width: 100%; max-height: 220px; border-radius: 6px; border: 2px solid var(--senai-azul-claro); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        #file-name { font-size: 0.85rem; color: #555; margin-top: 8px; word-break: break-all; }
+        .btn-remover-foto { background-color: #d9534f; width: auto; padding: 6px 12px; font-size: 0.8rem; margin-top: 8px; }
+        .btn-remover-foto:hover { background-color: #c9302c; }
+
+        .doc-item { background-color: var(--senai-cinza-fundo); border-left: 4px solid var(--senai-azul-claro); padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .doc-item strong { color: var(--senai-azul-escuro); }
+        .doc-type { background-color: var(--senai-azul-escuro); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap; }
+        .doc-anexo { display: inline-block; margin-top: 4px; font-size: 0.75rem; color: var(--senai-laranja); font-weight: bold; }
+
+        .doc-thumb { width: 62px; height: 62px; object-fit: cover; border-radius: 4px; border: 2px solid var(--senai-azul-claro); cursor: pointer; transition: transform 0.15s; }
+        .doc-thumb:hover { transform: scale(1.06); }
+        .doc-thumb-placeholder { width: 62px; height: 62px; display: flex; align-items: center; justify-content: center; background: #e9ecef; border-radius: 4px; font-size: 0.65rem; color: #888; text-align: center; border: 1px dashed #bbb; }
+
+        .btn-delete-doc { background: #d9534f; padding: 6px 10px; font-size: 0.75rem; width: auto; margin-top: 4px; }
+        .btn-delete-doc:hover { background: #c9302c; }
+
+        .log-item { font-size: 0.85rem; color: #555; padding: 8px; border-bottom: 1px dashed #ccc; background: #fafafa; }
+        .log-item::before { content: "📝 "; }
+        hr { border: 0; height: 1px; background: #ddd; margin: 25px 0; }
+        .info-user { background-color: rgba(0, 163, 224, 0.1); padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; color: var(--senai-azul-escuro); }
+
+        /* Modal para visualizar a foto em tamanho real */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { position: relative; max-width: 95%; max-height: 95%; }
+        .modal-content img { max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .modal-close { position: absolute; top: -45px; right: 0; background: var(--senai-laranja); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
+        .modal-close:hover { background: #d95619; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GED SOLARES <span>| Soluções Industriais</span></h1>
+        <span>INTEGRA SENAI</span>
+    </header>
+
+    <div class="container">
+        <!-- TELA DE LOGIN -->
+        <div id="login-screen" class="login-box active">
+            <h2>Acesso Restrito ao Sistema</h2>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: #666;">Por favor, identifique-se para acessar os documentos confidenciais da SOLARES.</p>
+
+            <label>Nome do Colaborador:</label>
+            <input type="text" id="username" placeholder="Digite seu nome completo">
+
+            <label>Setor de Atuação:</label>
+            <select id="user-role">
+                <option value="Recursos Humanos">Recursos Humanos (RH)</option>
+                <option value="Jurídico">Jurídico</option>
+                <option value="Fiscalização">Fiscalização</option>
+            </select>
+
+            <button onclick="fazerLogin()">Entrar no Sistema</button>
+        </div>
+
+        <!-- TELA PRINCIPAL -->
+        <div id="main-screen" class="main-app">
+            <div class="info-user">
+                Usuário logado: <strong><span id="logged-user"></span></strong> | Setor: <strong><span id="logged-role"></span></strong>
+            </div>
+            <button onclick="logout()" class="btn-logout">Sair do Sistema</button>
+
+            <hr>
+            <h2>Cadastrar Novo Documento</h2>
+
+            <!-- ÁREA DE UPLOAD DE FOTO -->
+            <div class="upload-box">
+                <p><strong>📷 Anexar Foto do Documento</strong><br>Tire uma foto ou selecione uma imagem do documento físico. A imagem será armazenada localmente (IndexedDB).</p>
+                <input type="file" id="doc-image" accept="image/*" capture="environment" onchange="anexarFoto()" style="display: none;">
+                <button class="upload-btn" id="btn-anexar" onclick="document.getElementById('doc-image').click()">
+                    📷 Selecionar Foto do Documento
+                </button>
+
+                <div id="preview-box">
+                    <img id="preview-img" alt="Pré-visualização do documento">
+                    <p id="file-name"></p>
+                    <button class="btn-remover-foto" onclick="removerFoto()">✖ Remover Foto</button>
+                </div>
+            </div>
+
+            <label>Nome / Identificação do Documento:</label>
+            <input type="text" id="doc-name" placeholder="Preencha o nome do documento">
+
+            <label>Categoria do Documento:</label>
+            <select id="doc-type">
+                <option value="Contrato">Contrato de Trabalho</option>
+                <option value="Processo Judicial">Processo Judicial</option>
+                <option value="Fiscalização">Documento de Fiscalização</option>
+                <option value="Ficha do Colaborador">Ficha do Colaborador</option>
+            </select>
+
+            <button onclick="cadastrarDocumento()">Cadastrar e Arquivar Documento</button>
+
+            <hr>
+            <h2>Busca Rápida de Documentos</h2>
+            <input type="text" id="search-bar" onkeyup="buscarDocumento()" placeholder="Digite o nome do documento ou colaborador...">
+            <div id="document-list"></div>
+
+            <hr>
+            <h2>Log de Auditoria (Rastreabilidade)</h2>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Histórico de ações para garantir a integridade e segurança dos dados.</p>
+            <div id="audit-log"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE VISUALIZAÇÃO DE FOTO -->
+    <div id="foto-modal" class="modal-overlay" onclick="if(event.target===this) fecharFotoModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="fecharFotoModal()">✖</button>
+            <img id="foto-modal-img" alt="Documento">
+        </div>
+    </div>
+
+<script>
+    // ===================== ESTADO =====================
+    let documentos = JSON.parse(localStorage.getItem('docs_senai')) || [];
+    let logs = JSON.parse(localStorage.getItem('logs_senai')) || [];
+    let usuarioAtual = "";
+    let fotoFile = null;       // File selecionado (ainda não salvo)
+    let thumbUrls = [];        // blob URLs ativos (para revogar)
+    let db = null;             // conexão IndexedDB
+
+    // ===================== INDEXEDDB =====================
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            if (db) { resolve(db); return; }
+            const request = indexedDB.open('ged_solares_db', 1);
+            request.onupgradeneeded = (e) => {
+                const database = e.target.result;
+                if (!database.objectStoreNames.contains('fotos')) {
+                    database.createObjectStore('fotos', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+            request.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function salvarFotoDB(id, blob) {
+        await initDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('fotos', 'readwrite');
+            const req = tx.objectStore('fotos').put({ id, blob });
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async function obterFotoDB(id) {
+        await initDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('fotos', 'readonly');
+            const req = tx.objectStore('fotos').get(id);
+            req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async function removerFotoDB(id) {
+        await initDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('fotos', 'readwrite');
+            const req = tx.objectStore('fotos').delete(id);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    // ===================== INICIALIZAÇÃO =====================
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await initDB();
+            migrarDocumentos();
+        } catch (err) {
+            console.error('IndexedDB indisponível:', err);
+            alert('⚠️ O navegador não permitiu o armazenamento local de imagens. Os documentos serão cadastrados, mas sem salvar as fotos.');
+        }
+    });
+
+    function gerarId() {
+        return 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
+    }
+
+    // Dá ID a documentos antigos (criados antes desta versão)
+    function migrarDocumentos() {
+        let mudou = false;
+        documentos.forEach(doc => { if (!doc.id) { doc.id = gerarId(); mudou = true; } });
+        if (mudou) localStorage.setItem('docs_senai', JSON.stringify(documentos));
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
+
+    // ===================== LOGIN / LOGOUT =====================
+    function fazerLogin() {
+        const nome = document.getElementById('username').value;
+        const setor = document.getElementById('user-role').value;
+        if (nome.trim() === "") { alert("Por favor, digite seu nome."); return; }
+
+        usuarioAtual = nome;
+        document.getElementById('logged-user').innerText = nome;
+        document.getElementById('logged-role').innerText = setor;
+
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('main-screen').classList.add('active');
+
+        registrarLog(`Usuário ${nome} (${setor}) fez login no sistema.`);
+        renderizarDocumentos();
+        renderizarLogs();
+    }
+
+    function logout() {
+        registrarLog(`Usuário ${usuarioAtual} saiu do sistema.`);
+        document.getElementById('login-screen').classList.add('active');
+        document.getElementById('main-screen').classList.remove('active');
+        document.getElementById('username').value = "";
+        document.getElementById('search-bar').value = "";
+        removerFoto();
+        fecharFotoModal();
+    }
+
+    // ===================== UPLOAD / PREVIEW =====================
+    function anexarFoto() {
+        const fileInput = document.getElementById('doc-image');
+        if (fileInput.files.length === 0) return;
+
+        const file = fileInput.files[0];
+
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione um arquivo de imagem (JPG, PNG, etc).');
+            fileInput.value = '';
+            return;
+        }
+
+        fotoFile = file;
+        const tamanhoKB = (file.size / 1024).toFixed(1);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('preview-box').style.display = 'block';
+            document.getElementById('file-name').innerText = `📎 ${file.name} — ${file.type}, ${tamanhoKB} KB`;
+        };
+        reader.readAsDataURL(file);
+
+        const docNameField = document.getElementById('doc-name');
+        if (docNameField.value.trim() === "") {
+            docNameField.value = file.name.replace(/\.[^/.]+$/, "");
+        }
+
+        registrarLog(`Usuário ${usuarioAtual} anexou a foto "${file.name}" (${tamanhoKB} KB).`);
+        renderizarLogs();
+    }
+
+    function removerFoto() {
+        fotoFile = null;
+        document.getElementById('doc-image').value = "";
+        document.getElementById('preview-box').style.display = 'none';
+        document.getElementById('preview-img').src = "";
+        document.getElementById('file-name').innerText = "";
+    }
+
+    // ===================== CADASTRAR =====================
+    async function cadastrarDocumento() {
+        const nome = document.getElementById('doc-name').value;
+        const tipo = document.getElementById('doc-type').value;
+
+        if (nome.trim() === "") { alert("Digite o nome do documento."); return; }
+
+        const docId = gerarId();
+        const dataAgora = new Date().toLocaleString('pt-BR');
+
+        const doc = {
+            id: docId,
+            nome: nome,
+            tipo: tipo,
+            data: dataAgora,
+            anexo: fotoFile ? {
+                nome: fotoFile.name,
+                tipo: fotoFile.type || 'imagem',
+                tamanho: (fotoFile.size / 1024).toFixed(1) + ' KB'
+            } : null
+        };
+
+        // Salva o BLOB da imagem no IndexedDB (se houver)
+        if (fotoFile) {
+            try {
+                await salvarFotoDB(docId, fotoFile);
+            } catch (err) {
+                console.error('Erro ao salvar foto:', err);
+                if (!confirm('Não foi possível salvar a foto no IndexedDB. Cadastrar o documento mesmo assim (sem foto)?')) {
+                    return;
+                }
+                doc.anexo = null;
+            }
+        }
+
+        documentos.push(doc);
+        localStorage.setItem('docs_senai', JSON.stringify(documentos));
+
+        const msgAnexo = doc.anexo ? ` com foto anexada (${doc.anexo.nome})` : ` (sem foto)`;
+        registrarLog(`Usuário ${usuarioAtual} cadastrou o documento: "${nome}" (${tipo})${msgAnexo}.`);
+
+        document.getElementById('doc-name').value = "";
+        removerFoto();
+        await renderizarDocumentos();
+        renderizarLogs();
+    }
+
+    // ===================== LISTAGEM =====================
+    async function renderizarDocumentos(filtro = "") {
+        // Libera URLs antigas
+        thumbUrls.forEach(u => URL.revokeObjectURL(u));
+        thumbUrls = [];
+
+        const lista = document.getElementById('document-list');
+        lista.innerHTML = "";
+
+        const filtrados = documentos.filter(doc =>
+            doc.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+            doc.tipo.toLowerCase().includes(filtro.toLowerCase())
+        );
+
+        if (filtrados.length === 0) {
+            lista.innerHTML = "<p style='color: #888; font-size: 0.9rem;'>Nenhum documento encontrado.</p>";
+            return;
+        }
+
+        const partes = await Promise.all(filtrados.map(async doc => {
+            let thumbHtml = '';
+            if (doc.anexo) {
+                let blob = null;
+                try { blob = await obterFotoDB(doc.id); } catch (e) { /* ignora */ }
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    thumbUrls.push(url);
+                    thumbHtml = `<img src="${url}" class="doc-thumb" onclick="abrirFoto('${doc.id}')" title="Clique para ampliar" alt="foto">`;
+                } else {
+                    thumbHtml = `<div class="doc-thumb-placeholder">📷<br>N/D</div>`;
+                }
+            }
+
+            const anexoInfo = doc.anexo
+                ? `<span class="doc-anexo">📎 ${escapeHtml(doc.anexo.nome)} (${escapeHtml(doc.anexo.tamanho)})</span>`
+                : `<span class="doc-anexo" style="color:#888; font-weight:normal;">Sem foto anexada</span>`;
+
+            return `
+                <div class="doc-item">
+                    <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+                        ${thumbHtml ? `<div>${thumbHtml}</div>` : ''}
+                        <div style="flex:1; min-width:0;">
+                            <strong>${escapeHtml(doc.nome)}</strong><br>
+                            <small style="color:#777;">Cadastrado em: ${doc.data}</small><br>
+                            ${anexoInfo}
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+                        <span class="doc-type">${escapeHtml(doc.tipo)}</span>
+                        <button class="btn-delete-doc" onclick="excluirDocumento('${doc.id}')">🗑 Excluir</button>
+                    </div>
+                </div>
+            `;
+        }));
+
+        lista.innerHTML = partes.join('');
+    }
+
+    function buscarDocumento() {
+        const termo = document.getElementById('search-bar').value;
+        renderizarDocumentos(termo);
+        if (termo.length > 2) {
+            registrarLog(`Usuário ${usuarioAtual} buscou pelo termo: "${termo}".`);
+            renderizarLogs();
+        }
+    }
+
+    // ===================== EXCLUIR =====================
+    async function excluirDocumento(docId) {
+        const doc = documentos.find(d => d.id === docId);
+        if (!doc) return;
+
+        if (!confirm(`Excluir o documento "${doc.nome}"? A foto anexada também será removida.`)) return;
+
+        try { await removerFotoDB(docId); }
+        catch (err) { console.error('Erro ao remover blob:', err); }
+
+        documentos = documentos.filter(d => d.id !== docId);
+        localStorage.setItem('docs_senai', JSON.stringify(documentos));
+        registrarLog(`Usuário ${usuarioAtual} excluiu o documento: "${doc.nome}".`);
+        await renderizarDocumentos();
+        renderizarLogs();
+    }
+
+    // ===================== MODAL DE FOTO =====================
+    async function abrirFoto(docId) {
+        try {
+            const blob = await obterFotoDB(docId);
+            if (!blob) { alert('Foto não encontrada no armazenamento local.'); return; }
+            const url = URL.createObjectURL(blob);
+            const img = document.getElementById('foto-modal-img');
+            img.src = url;
+            img.onload = () => setTimeout(() => URL.revokeObjectURL(url), 1000);
+            document.getElementById('foto-modal').classList.add('active');
+        } catch (err) {
+            console.error(err);
+            alert('Não foi possível abrir a foto.');
+        }
+    }
+
+    function fecharFotoModal() {
+        document.getElementById('foto-modal').classList.remove('active');
+        document.getElementById('foto-modal-img').src = '';
+    }
+
+    // ===================== LOGS =====================
+    function registrarLog(acao) {
+        const dataAgora = new Date().toLocaleString('pt-BR');
+        logs.push(`[${dataAgora}] - ${acao}`);
+        localStorage.setItem('logs_senai', JSON.stringify(logs));
+    }
+
+    function renderizarLogs() {
+        const listaLogs = document.getElementById('audit-log');
+        listaLogs.innerHTML = "";
+        logs.slice(-5).reverse().forEach(log => {
+            listaLogs.innerHTML += `<div class="log-item">${escapeHtml(log)}</div>`;
+        });
+    }
+</script>
+</body>
+</html>
